@@ -1,44 +1,107 @@
-import axios from 'axios';
-import { getAuthToken } from '../utils/adminAuth';
+import { isAdmin } from '../utils/adminAuth';
+import {
+  getAllCategories as getCategoriesFromFirebase,
+  getQuestionBanksByCategory,
+  getBankInfo as getBankInfoFromFirebase,
+  addQuestionsToCategory,
+} from './firebaseService';
+import { generateQuestions as generateQuestionsWithAI } from './aiService';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-});
-
-// Add auth token to requests
-api.interceptors.request.use(
-  async (config) => {
-    const token = await getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+/**
+ * Check if user is admin before performing operations
+ */
+async function requireAdmin() {
+  const admin = await isAdmin();
+  if (!admin) {
+    throw new Error('Unauthorized: Admin access required');
   }
-);
+}
 
 export const apiService = {
   // Categories
-  getCategories: () => api.get('/categories'),
+  getCategories: async () => {
+    await requireAdmin();
+    const categories = await getCategoriesFromFirebase();
+    return { data: categories };
+  },
   
   // Question Banks
-  getQuestionBanks: (categoryId) => api.get(`/categories/${categoryId}/banks`),
+  getQuestionBanks: async (categoryId) => {
+    await requireAdmin();
+    const data = await getQuestionBanksByCategory(categoryId);
+    return { data };
+  },
   
   // Bank Info
-  getBankInfo: (categoryId) => api.get(`/categories/${categoryId}/bank-info`),
+  getBankInfo: async (categoryId) => {
+    await requireAdmin();
+    const bankInfo = await getBankInfoFromFirebase(categoryId);
+    return { data: bankInfo };
+  },
   
   // Generate Questions
-  generateQuestions: (categoryId) =>
-    api.post(`/categories/${categoryId}/generate`),
+  generateQuestions: async (categoryId) => {
+    await requireAdmin();
+    
+    // Get bank info to determine how many questions to generate
+    const bankInfo = await getBankInfoFromFirebase(categoryId);
+    
+    if (!bankInfo.canGenerate) {
+      throw new Error('Cannot generate more questions. Maximum limit reached for this category.');
+    }
+    
+    // Get category info
+    const categories = await getCategoriesFromFirebase();
+    const category = categories.find(c => c.id === categoryId);
+    const categoryTitle = category?.title || categoryId;
+    const categorySubtitle = category?.subtitle || null;
+    
+    // Generate the exact number of questions needed
+    const generatedQuestions = await generateQuestionsWithAI(
+      categoryTitle,
+      categorySubtitle,
+      bankInfo.needed
+    );
+    
+    return {
+      data: {
+        success: true,
+        questions: generatedQuestions,
+        count: generatedQuestions.length,
+        bankInfo: {
+          targetBank: bankInfo.targetBank,
+          currentCount: bankInfo.currentCount,
+          needed: bankInfo.needed,
+        },
+      },
+    };
+  },
   
   // Add Questions
-  addQuestions: (categoryId, questions, bankId = null) =>
-    api.post(`/categories/${categoryId}/questions`, { questions, bankId }),
+  addQuestions: async (categoryId, questions, bankId = null) => {
+    await requireAdmin();
+    
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      throw new Error('Questions array is required');
+    }
+    
+    // If bankId not provided, get bank info to determine target bank
+    let targetBankId = bankId;
+    if (!targetBankId) {
+      const bankInfo = await getBankInfoFromFirebase(categoryId);
+      targetBankId = bankInfo.targetBank;
+    }
+    
+    const result = await addQuestionsToCategory(categoryId, questions, targetBankId);
+    return {
+      data: {
+        success: true,
+        message: `Successfully added ${result.added} question(s) to ${result.bankId}`,
+        ...result,
+      },
+    };
+  },
 };
 
-export default api;
+export default apiService;
 

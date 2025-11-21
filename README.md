@@ -6,19 +6,7 @@ An AI-powered question generation tool for Pitch Trivia admin panel. This applic
 
 ```
 Pitch Trivia server/
-├── server/                 # Node.js/Express backend
-│   ├── server.js          # Express server entry point
-│   ├── firebase/
-│   │   └── admin.js       # Firebase Admin SDK configuration
-│   ├── services/
-│   │   ├── questionService.js  # Question CRUD operations
-│   │   └── aiService.js         # OpenAI integration
-│   ├── utils/
-│   │   └── adminAuth.js   # Admin authentication middleware
-│   ├── package.json
-│   └── .env.example
-│
-└── client/                 # React frontend
+└── client/                 # React frontend (standalone)
     ├── src/
     │   ├── App.jsx        # Main app with routing
     │   ├── index.js       # React entry point
@@ -28,12 +16,15 @@ Pitch Trivia server/
     │   │   ├── Login.jsx  # Login page
     │   │   └── Generator.jsx  # Main generator interface
     │   ├── services/
-    │   │   └── api.js     # API service layer
+    │   │   ├── api.js           # API service layer
+    │   │   ├── firebaseService.js  # Firebase Realtime DB operations
+    │   │   └── aiService.js     # Google Gemini AI integration
     │   └── utils/
     │       └── adminAuth.js  # Client-side auth utilities
     ├── public/
     │   └── index.html
-    └── package.json
+    ├── package.json
+    └── .env.example
 ```
 
 ## Features
@@ -53,59 +44,29 @@ Pitch Trivia server/
 - Node.js (v16 or higher)
 - npm or yarn
 - Firebase project with Realtime Database
-- OpenAI API key
+- Google Gemini API key
 
-### Quick Start (Install All Dependencies)
+### Quick Start
+
+**1. Install Dependencies**
 
 From the root directory:
 ```bash
 npm run install:all
 ```
 
-Or install separately:
-
-### 1. Server Setup
-
-```bash
-cd server
-npm install
-```
-
-Create a `.env` file based on `.env.example`:
-
-```env
-# Firebase Admin SDK
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
-
-# OpenAI API
-OPENAI_API_KEY=sk-your-openai-api-key
-
-# Server
-PORT=5000
-NODE_ENV=development
-
-# Admin Emails (comma-separated)
-ADMIN_EMAILS=Games@pitchtrivia.com,games@pitchtrivia.com
-```
-
-**Getting Firebase Admin Credentials:**
-1. Go to Firebase Console → Project Settings → Service Accounts
-2. Click "Generate New Private Key"
-3. Download the JSON file
-4. Copy the values to your `.env` file
-
-### 2. Client Setup
-
+Or from the client directory:
 ```bash
 cd client
 npm install
 ```
 
-Create a `.env` file in the client directory:
+**2. Configure Environment Variables**
+
+Create a `.env` file in the `client` directory based on `.env.example`:
 
 ```env
+# Firebase Configuration
 REACT_APP_FIREBASE_API_KEY=your-api-key
 REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 REACT_APP_FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
@@ -113,54 +74,36 @@ REACT_APP_FIREBASE_PROJECT_ID=your-project-id
 REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=123456789
 REACT_APP_FIREBASE_APP_ID=your-app-id
-REACT_APP_API_URL=http://localhost:5000/api
+
+# Google Gemini API
+REACT_APP_GEMINI_API_KEY=your-gemini-api-key
 ```
 
-### 3. Running the Application
+**Getting Firebase Configuration:**
+1. Go to Firebase Console → Project Settings → General
+2. Scroll down to "Your apps" section
+3. Click on the web app icon (</>) or create a new web app
+4. Copy the configuration values to your `.env` file
 
-**Option 1: Use the startup scripts (Recommended)**
+**Getting Gemini API Key:**
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Copy the key to `REACT_APP_GEMINI_API_KEY` in your `.env` file
 
-Windows:
+**3. Run the Application**
+
+From the root directory:
 ```bash
-start.bat
-```
-
-Mac/Linux:
-```bash
-chmod +x start.sh
-./start.sh
-```
-
-**Option 2: Run from root directory**
-
-```bash
-# Terminal 1 - Server (production)
-npm run start:server
-
-# Terminal 1 - Server (development with auto-reload)
 npm run dev
-# or
-npm run dev:server
-
-# Terminal 2 - Client
-npm run start:client
 ```
 
-**Option 3: Run from individual directories**
-
+Or from the client directory:
 ```bash
-# Terminal 1 - Server
-cd server
-npm start
-# or for development with auto-reload:
-npm run dev
-
-# Terminal 2 - Client
 cd client
-npm start
+npm run dev
 ```
 
-The client will run on `http://localhost:3000` and the server on `http://localhost:5000`.
+The application will open at `http://localhost:3000`.
 
 ## How It Works
 
@@ -171,15 +114,13 @@ The client will run on `http://localhost:3000` and the server on `http://localho
 5. **Review**: Review the generated questions
 6. **Save**: Click "Save All Questions" to add them to Firebase
 
-## API Endpoints
+## Architecture
 
-### Protected Routes (Require Admin Token)
-
-- `GET /api/categories` - Get all categories
-- `GET /api/categories/:categoryId/banks` - Get question banks for a category
-- `GET /api/categories/:categoryId/example` - Get example question
-- `POST /api/categories/:categoryId/generate` - Generate questions using AI
-- `POST /api/categories/:categoryId/questions` - Add questions to category
+This is a standalone React application that:
+- Connects directly to Firebase Realtime Database using the Firebase Client SDK
+- Uses Google Gemini AI for question generation (runs in the browser)
+- Performs all operations client-side with admin authentication checks
+- No backend server required!
 
 ## Data Structure
 
@@ -199,10 +140,11 @@ The application uses the Pitch Trivia color scheme:
 
 ## Security Notes
 
-- Admin access is controlled by email whitelist
-- All API routes require Firebase authentication token
-- Firebase Admin SDK is used for server-side operations
-- Client-side authentication uses Firebase Auth
+- Admin access is controlled by email whitelist (configured in `client/src/utils/adminAuth.js`)
+- All operations require Firebase authentication
+- Firebase Client SDK is used for all database operations
+- Admin checks are performed client-side before any operations
+- **Important**: The Gemini API key is exposed in the client bundle. For production, consider using Firebase Cloud Functions or another backend service to protect the API key.
 
 ## Troubleshooting
 
@@ -215,9 +157,10 @@ The application uses the Pitch Trivia color scheme:
 - Check that Firebase credentials are correct
 
 **"Failed to generate questions"**
-- Verify your OpenAI API key is valid
-- Check that you have sufficient OpenAI credits
-- Ensure the example question format is correct
+- Verify your Gemini API key is valid (check `.env` file)
+- Check that you have sufficient Gemini API quota
+- Ensure `REACT_APP_GEMINI_API_KEY` is set in your `.env` file
+- Restart the development server after adding/changing environment variables
 
 ## License
 

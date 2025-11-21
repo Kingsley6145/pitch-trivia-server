@@ -4,16 +4,11 @@
   "description": "Question Generator for Pitch Trivia",
   "private": true,
   "scripts": {
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "install:all": "npm install && cd client && npm install",
     "vercel-build": "cd client && npm install && npm run build",
-    "start": "echo 'Starting server and client...' && start cmd /k \"cd server && npm start\" && timeout /t 2 /nobreak >nul && start cmd /k \"cd client && npm start\"",
-    "start:server": "cd server && npm start",
-    "start:client": "cd client && npm start",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\"",
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm start",
-    "build": "cd client && npm run build",
-    "build:client": "cd client && npm run build"
+    "start": "cd client && npm start",
+    "dev": "cd client && npm start",
+    "build": "cd client && npm run build"
   },
   "keywords": [
     "trivia",
