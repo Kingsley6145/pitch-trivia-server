@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "client/build",
+  "installCommand": "cd client && npm install",
+  "framework": "create-react-app"
+}
+

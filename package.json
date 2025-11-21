@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "vercel-build": "cd client && npm install && npm run build",
     "start": "echo 'Starting server and client...' && start cmd /k \"cd server && npm start\" && timeout /t 2 /nobreak >nul && start cmd /k \"cd client && npm start\"",
     "start:server": "cd server && npm start",
     "start:client": "cd client && npm start",
