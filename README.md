@@ -105,6 +105,48 @@ npm run dev
 
 The application will open at `http://localhost:3000`.
 
+## Deployment to Vercel
+
+To deploy this application to Vercel:
+
+1. **Push your code to GitHub/GitLab/Bitbucket**
+
+2. **Import project in Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "Add New" → "Project"
+   - Import your repository
+
+3. **Configure build settings** (usually auto-detected):
+   - Framework Preset: Create React App
+   - Root Directory: Leave as default or set to `./client`
+   - Build Command: `cd client && npm run build`
+   - Output Directory: `client/build`
+
+4. **Add Environment Variables**:
+   - Go to **Settings** → **Environment Variables** in your Vercel project
+   - Add all your Firebase and Gemini API keys:
+     ```
+     REACT_APP_FIREBASE_API_KEY=your-api-key
+     REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+     REACT_APP_FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+     REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+     REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+     REACT_APP_FIREBASE_MESSAGING_SENDER_ID=123456789
+     REACT_APP_FIREBASE_APP_ID=your-app-id
+     REACT_APP_GEMINI_API_KEY=your-gemini-api-key
+     ```
+   - Select **Production**, **Preview**, and **Development** environments as needed
+   - Click **Save**
+
+5. **Deploy**:
+   - Vercel will automatically deploy on every push to your main branch
+   - Or manually trigger a deployment from the Deployments tab
+
+6. **Important**: After adding/changing environment variables, **redeploy** your application:
+   - Go to the Deployments tab
+   - Click the three dots (⋯) on the latest deployment
+   - Select "Redeploy"
+
 ## How It Works
 
 1. **Login**: Admin logs in with whitelisted email
@@ -161,6 +203,18 @@ The application uses the Pitch Trivia color scheme:
 - Check that you have sufficient Gemini API quota
 - Ensure `REACT_APP_GEMINI_API_KEY` is set in your `.env` file
 - Restart the development server after adding/changing environment variables
+
+**"REACT_APP_GEMINI_API_KEY is not set in environment variables" (Deployed on Vercel)**
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings** → **Environment Variables**
+3. Add a new environment variable:
+   - **Name**: `REACT_APP_GEMINI_API_KEY`
+   - **Value**: Your Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - **Environment**: Production (and Preview/Development if needed)
+4. Click **Save**
+5. **Redeploy** your application (go to Deployments tab → click the three dots on latest deployment → Redeploy)
+
+**Note**: After adding environment variables in Vercel, you must redeploy for them to take effect.
 
 ## License
 

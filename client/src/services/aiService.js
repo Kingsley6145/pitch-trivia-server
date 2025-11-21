@@ -4,7 +4,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const getGenAI = () => {
   const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('REACT_APP_GEMINI_API_KEY is not set in environment variables');
+    throw new Error(
+      'REACT_APP_GEMINI_API_KEY is not set in environment variables. ' +
+      'To fix this, add the environment variable in Vercel: ' +
+      '1. Go to your Vercel project settings, 2. Navigate to Environment Variables, ' +
+      '3. Add REACT_APP_GEMINI_API_KEY with your Gemini API key value, ' +
+      '4. Redeploy the application.'
+    );
   }
   return new GoogleGenerativeAI(apiKey);
 };
